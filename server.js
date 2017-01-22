@@ -8,10 +8,10 @@ var config = {
     "secrets" : {
         'clientId' : 'IAFEM1FEVX1WFUWPRA5K4TKWLVCOSMPNXO4G1HWKWTYIX4E0',
         'clientSecret' : 'E0MFGQOQQQ3SRE0BXQ2FMH4XTESMNCHBT52CXEFPJ3DAYUGR',
-        'redirectUrl' : 'http://localhost:8080/' // This should also be set in your OAuth profile.
+        'redirectUrl' : 'http://localhost:9000/callback'
     }
 };
-var foursquare  = require("node-foursquare")(config);
+var Foursquare  = require("node-foursquare")(config);
 
 var dbHost      = 'localhost';
 var dbPort      = '27017';
@@ -57,6 +57,11 @@ app.get('/callback', function (req, res) {
         else {
             // Save the accessToken and redirect.
             console.log('accessToken >> ', accessToken);
+            var baseURL = "http://localhost:8080/#/callback/";
+            res.writeHead(302, {
+                'Location': baseURL+accessToken
+            });
+            res.end();
         }
     });
 });
