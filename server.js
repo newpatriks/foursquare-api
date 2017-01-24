@@ -57,7 +57,7 @@ app.get('/callback', function (req, res) {
         else {
             // Save the accessToken and redirect.
             console.log('accessToken >> ', accessToken);
-            var baseURL = "http://localhost:8080/#/callback/";
+            var baseURL = "http://localhost:8080/app/#/callback/";
             res.writeHead(302, {
                 'Location': baseURL+accessToken
             });
