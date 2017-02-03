@@ -15,7 +15,7 @@ var Foursquare  = require("node-foursquare")(config);
 
 var dbHost      = 'localhost';
 var dbPort      = '27017';
-var dbName      = 'socialpatterns';
+var dbName      = 'habbits';
 
 mongoose.connect('mongodb://'+dbHost+':'+dbPort+'/'+dbName);
 var db = mongoose.connection;
@@ -25,10 +25,8 @@ db.once('open', function() {
 });
 
 
-// configure app to use bodyParser()
-// this will let us get the data from a POST
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+app.use(bodyParser.json({limit: '50mb'}));
+app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -68,57 +66,86 @@ app.get('/callback', function (req, res) {
 
 router.route('/profile')
     .post(function(req, res) {
-        Profile.findOne({id: req.body.id}, function(err, profile) {
+        Profile.findOne({foursquareId: req.body.id}, function(err, profile) {
             if (!profile) {
 
                 profile = new Profile();      // create a new instance of the Profile model
-                profile.id = req.body.id;
-                profile.name = req.body.name;
-                // profile.music = req.body.music;
-                // profile.books = req.body.books;
-                // profile.movies = req.body.movies;
-                // profile.television = req.body.television;
+                profile.foursquareId = req.body.id;
+                profile.personalInfo.firstName = req.body.firstName || '';
+                profile.personalInfo.lastName = req.body.lastName || '';
+                profile.personalInfo.gender = req.body.gender || '';
+                profile.personalInfo.picture = req.body.photo.prefix + 'width300' + req.body.photo.suffix;
+                profile.personalInfo.relationship = req.body.relationship || '';
+                profile.personalInfo.url = req.body.url || '';
+                profile.personalInfo.bio = req.body.bio || '';
+                profile.personalInfo.email = req.body.contact.email || '';
+                profile.personalInfo.checkins.count = req.body.checkins.count || 0;
+                profile.friends = req.body.friends.count || '';
+                profile.tips = req.body.tips.count || '';
+                profile.currentCity = req.body.homeCity || '';
+                profile.superuser = req.body.superuser || '';
+                profile.type = req.body.type || '';
+                profile.mayorships = req.body.mayorships.count || 0;
+                profile.createdAt = req.body.createdAt || '';
 
                 profile.save(function(err) {
                     if (err)
                         res.send(err);
 
-                    res.json({ status: '200', message: 'Profile created!', data: profile.id });
+                    res.json({ status: '200', message: 'Profile created!', data: profile.foursquareId });
                 });
             } else {
-                profile.update(
-                    {id: req.body.id},
-                    // {music: req.body.music, books: req.body.books, movies: req.body.movies, television: req.body.television},
-                    function(err) {
-                        if (err)
-                            res.send(err);
-
-                        res.json({ status: '200', message: 'Profile updated!', data: profile.id });
-                    }
-                );
+                res.json({ status: '200', message: 'This user already exist!', data: profile });
             }
         });
+    });
 
-    })
+router.route('/checkins')
+    .post(function(req, res) {
+        Profile.findOne({foursquareId: req.body.id}, function(err, profile) {
 
-    .get(function(req, res) {
-        console.log('GET!');
-        Profile.find(function(err, profile) {
-            if (err)
-                res.send(err);
+            if (!profile) {
+                profile = new Profile();      // create a new instance of the Profile model
+                profile.foursquareId = req.body.id;
+                profile.checkins = req.body.data;
+                profile.save(function(err) {
+                    if (err)
+                        res.send(err);
 
-            res.json(profile);
+                    res.json({ status: '200', message: 'Profile created'});
+                });
+            } else {
+                profile.update({checkins: req.body.data}, function(err) {
+                    if (err)
+                        res.send(err);
+
+                    res.json({ status: '200', message: 'Profile updated'});
+                });
+            }
         });
     });
 
-router.route('/profile/:profileId').get(function(req, res) {
-    Profile.findOne({id: req.params.profileId}, function(err, profile) {
-        if (err)
-            res.send(err);
-
-        res.json(profile);
+router.route('/user/:id')
+    .get(function(req, res) {
+        Profile.findOne({foursquareId: req.params.id}, function(err, profile) {
+            if (!profile) {
+                res.json({ status: '200', message: 'Profile not found', data: null});
+            } else {
+                res.json({ status: '200', message: 'Profile found', data: profile.personalInfo});
+            }
+        });
     });
-});
+
+router.route('/user-checkins/:id')
+    .get(function(req, res) {
+        Profile.findOne({foursquareId: req.params.id}, function(err, profile) {
+            if (!profile) {
+                res.json({ status: '200', message: 'Profile not found', data: null});
+            } else {
+                res.json({ status: '200', message: 'Profile found', data: profile.checkins});
+            }
+        });
+    });
 
 
 app.use('/api', router);
