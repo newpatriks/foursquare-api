@@ -148,6 +148,7 @@ router.route('/user-checkins/:id')
     });
 
 
+
 app.use('/api', router);
 
 // START THE SERVER
