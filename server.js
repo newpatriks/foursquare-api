@@ -69,24 +69,29 @@ router.route('/profile')
         Profile.findOne({foursquareId: req.body.id}, function(err, profile) {
             if (!profile) {
 
-                profile = new Profile();      // create a new instance of the Profile model
+                profile = new Profile();
                 profile.foursquareId = req.body.id;
                 profile.personalInfo.firstName = req.body.firstName || '';
                 profile.personalInfo.lastName = req.body.lastName || '';
-                profile.personalInfo.gender = req.body.gender || '';
                 profile.personalInfo.picture = req.body.photo.prefix + 'width300' + req.body.photo.suffix;
+                profile.personalInfo.checkins.count = req.body.checkins.count || 0;
+                profile.personalInfo.createdAt = req.body.createdAt || '';
+                profile.personalInfo.friends.count = req.body.friends.count || '';
+                profile.personalInfo.friends.items = req.body.friends.groups;
+                profile.personalInfo.photos.count = req.body.photos.count || '';
+                profile.personalInfo.photos.items = req.body.photos.items;
+                profile.personalInfo.lists.count = req.body.lists.count || '';
+                profile.personalInfo.lists.items = req.body.lists.groups;
+                profile.personalInfo.gender = req.body.gender || '';
                 profile.personalInfo.relationship = req.body.relationship || '';
                 profile.personalInfo.url = req.body.url || '';
                 profile.personalInfo.bio = req.body.bio || '';
                 profile.personalInfo.email = req.body.contact.email || '';
-                profile.personalInfo.checkins.count = req.body.checkins.count || 0;
-                profile.friends = req.body.friends.count || '';
-                profile.tips = req.body.tips.count || '';
-                profile.currentCity = req.body.homeCity || '';
-                profile.superuser = req.body.superuser || '';
-                profile.type = req.body.type || '';
-                profile.mayorships = req.body.mayorships.count || 0;
-                profile.createdAt = req.body.createdAt || '';
+                profile.personalInfo.tips = req.body.tips.count || '';
+                profile.personalInfo.contact = req.body.contact || '';
+                profile.personalInfo.currentCity = req.body.homeCity || '';
+                profile.personalInfo.superuser = req.body.superuser || '';
+                profile.personalInfo.mayorships = req.body.mayorships.count || 0;
 
                 profile.save(function(err) {
                     if (err)
