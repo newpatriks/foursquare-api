@@ -6,9 +6,9 @@ var Profile     = require('./profile');
 
 var config = {
     "secrets" : {
-        'clientId' : 'IAFEM1FEVX1WFUWPRA5K4TKWLVCOSMPNXO4G1HWKWTYIX4E0',
-        'clientSecret' : 'E0MFGQOQQQ3SRE0BXQ2FMH4XTESMNCHBT52CXEFPJ3DAYUGR',
-        'redirectUrl' : 'http://localhost:9000/callback'
+        'clientId' : process.env.CLIENT_ID,
+        'clientSecret' : process.env.CLIENT_SECRET,
+        'redirectUrl' : process.env.REDIRECT_URL
     }
 };
 var Foursquare  = require("node-foursquare")(config);
@@ -75,7 +75,7 @@ router.route('/profile')
                 profile.personalInfo.lastName = req.body.lastName || '';
                 profile.personalInfo.picture = req.body.photo.prefix + 'width300' + req.body.photo.suffix;
                 profile.personalInfo.checkins.count = req.body.checkins.count || 0;
-                profile.personalInfo.createdAt = req.body.createdAt || '';
+                profile.personalInfo.createdAt = req.body.createdAt || 0;
                 profile.personalInfo.friends.count = req.body.friends.count || '';
                 profile.personalInfo.friends.items = req.body.friends.groups;
                 profile.personalInfo.photos.count = req.body.photos.count || '';
@@ -112,7 +112,15 @@ router.route('/checkins')
             if (!profile) {
                 profile = new Profile();      // create a new instance of the Profile model
                 profile.foursquareId = req.body.id;
-                profile.checkins = req.body.data;
+
+                // parse checkins
+                var checkinList = req.body.data.map(function(checkin) {
+                    checkin.date = new Date(parseInt(checkin.createdAt) * 1000);
+                    console.log(checkin);
+                });
+
+                profile.checkins = checkinList;
+
                 profile.save(function(err) {
                     if (err)
                         res.send(err);
@@ -120,6 +128,10 @@ router.route('/checkins')
                     res.json({ status: '200', message: 'Profile created'});
                 });
             } else {
+                // parse checkins
+                req.body.data.forEach(function(checkin) {
+                    checkin.date = new Date(parseInt(checkin.createdAt) * 1000);
+                });
                 profile.update({checkins: req.body.data}, function(err) {
                     if (err)
                         res.send(err);
@@ -147,12 +159,37 @@ router.route('/user-checkins/:id')
             if (!profile) {
                 res.json({ status: '200', message: 'Profile not found', data: null});
             } else {
+
                 res.json({ status: '200', message: 'Profile found', data: profile.checkins});
             }
         });
     });
 
+router.route('/history/:id')
+    .get(function(req, res) {
+        Profile.findOne({foursquareId: req.params.id}, function(err, profile) {
+            if (!profile) {
+                res.json({ status: '200', message: 'Profile not found', data: null});
+            } else {
 
+                var queryResponse = Profile.aggregate([
+                    {$unwind:'$checkins'},
+                    {$project : {
+                        year: {$year: "$checkins.date"},
+                        month: {$month: "$checkins.date"}
+                    }},
+                    {$group: {_id:{year:"$year", month:"$month"}, count:{$sum:1}}},
+                    {$group: {_id:{year:"$_id.year"}, monthTotals: { $push:  { month: "$_id.month", count: "$count" } }}}
+                ]);
+
+                console.log('------------------------------------------------');
+                console.log(queryResponse);
+                console.log('------------------------------------------------');
+
+                res.json({ status: '200', message: '', data: queryResponse});
+            }
+        });
+    });
 
 app.use('/api', router);
 

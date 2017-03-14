@@ -1,7 +1,7 @@
 var mongoose    = require('mongoose');
 var Schema      = mongoose.Schema;
 
-var ProfileSchema   = new Schema({
+var ProfileSchema = new Schema({
     personalInfo: {
         firstName: String,
         lastName: String,
@@ -9,7 +9,7 @@ var ProfileSchema   = new Schema({
         checkins: {
             count: String
         },
-        createdAt: String,
+        createdAt: Number,
         relationship: String,
         url: String,
         bio: String,
