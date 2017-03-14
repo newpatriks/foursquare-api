@@ -13,11 +13,7 @@ var config = {
 };
 var Foursquare  = require("node-foursquare")(config);
 
-var dbHost      = 'localhost';
-var dbPort      = '27017';
-var dbName      = 'habbits';
-
-mongoose.connect('mongodb://'+dbHost+':'+dbPort+'/'+dbName);
+mongoose.connect(process.env.MONGODB_URI);
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'mongoose > connection error:'));
 db.once('open', function() {
