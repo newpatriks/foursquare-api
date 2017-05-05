@@ -34,7 +34,8 @@ var ProfileSchema = new Schema({
         },
     },
     foursquareId: String,
-    checkins: Object
+    checkins: Object,
+    historySimple: Object
 });
 
 module.exports = mongoose.model('Profile', ProfileSchema);

@@ -6,16 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/afuste/socialPatterns.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/afuste/socialPatterns/issues"
-  },
-  "homepage": "https://github.com/afuste/socialPatterns#readme",
+  "author": "Jordi Llobet",
+  "license": "MIT",
   "dependencies": {
     "body-parser": "~1.0.1",
     "express": "~4.0.0",

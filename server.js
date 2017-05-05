@@ -1,19 +1,29 @@
 var express     = require('express');
+var util        = require('util');
 var app         = express();
 var bodyParser  = require('body-parser');
 var mongoose    = require('mongoose');
 var Profile     = require('./profile');
+var port        = 9000;
+var router      = express.Router();
 
 var config = {
     "secrets" : {
         'clientId' : process.env.CLIENT_ID,
         'clientSecret' : process.env.CLIENT_SECRET,
-        'redirectUrl' : process.env.REDIRECT_URL
+        // 'redirectUrl' : process.env.REDIRECT_URL
+        'redirectUrl' : 'http://localhost:9000/api/callback'
     }
 };
+
+console.log(config);
+
+// console.log(config);
 var Foursquare  = require("node-foursquare")(config);
 
+console.log('process.env.MONGODB_URI >> ', process.env.MONGODB_URI);
 mongoose.connect(process.env.MONGODB_URI);
+
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'mongoose > connection error:'));
 db.once('open', function() {
@@ -29,9 +39,6 @@ app.use(function(req, res, next) {
   next();
 });
 
-var port = process.env.PORT || 9000;        // set our port
-var router = express.Router();              // get an instance of the express Router
-
 router.get('/', function(req, res) {
     res.json({ message: 'hooray! welcome to our api!' });
 });
@@ -41,7 +48,7 @@ router.get('/login', function(req, res) {
   res.end();
 });
 
-app.get('/callback', function (req, res) {
+router.get('/callback', function (req, res) {
     Foursquare.getAccessToken({
         code: req.query.code
     }, function (error, accessToken) {
@@ -161,35 +168,46 @@ router.route('/user-checkins/:id')
         });
     });
 
+var setDate = function(id, res) {
+    Profile.aggregate([
+        { $match: {
+            foursquareId: id
+        }},
+        { $unwind: '$checkins'},
+        { $project : {
+            year: { $year: "$checkins.date"},
+            month: { $month: "$checkins.date"}
+        }},
+        { $group: {_id :{year:"$year", month:"$month"}, count:{ $sum:1}}},
+        { $group: {_id :{year:"$_id.year"}, monthTotals: { $push:  { month: "$_id.month", count: "$count" } }}}
+    ], {}, function(err, result) {
+        if (err) {
+            return err;
+        }
+
+        Profile.update({historySimple: result}, function(err) {
+            if (err)
+                res.send(err)
+
+            res.json({ status: '200', message: 'Profile found', data: result});
+        });
+    });
+}
+
+var updateProfile = function(id, callback, res) {
+    Profile.findOne({foursquareId: id}, function(err, profile) {
+        if (profile) {
+            return callback(profile.foursquareId, res);
+        }
+    });
+}
+
 router.route('/history/:id')
     .get(function(req, res) {
-        Profile.findOne({foursquareId: req.params.id}, function(err, profile) {
-            if (!profile) {
-                res.json({ status: '200', message: 'Profile not found', data: null});
-            } else {
-
-                var queryResponse = Profile.aggregate([
-                    {$unwind:'$checkins'},
-                    {$project : {
-                        year: {$year: "$checkins.date"},
-                        month: {$month: "$checkins.date"}
-                    }},
-                    {$group: {_id:{year:"$year", month:"$month"}, count:{$sum:1}}},
-                    {$group: {_id:{year:"$_id.year"}, monthTotals: { $push:  { month: "$_id.month", count: "$count" } }}}
-                ]);
-
-                console.log('------------------------------------------------');
-                console.log(queryResponse);
-                console.log('------------------------------------------------');
-
-                res.json({ status: '200', message: '', data: queryResponse});
-            }
-        });
+        updateProfile(req.params.id, setDate, res);
     });
 
 app.use('/api', router);
-
-// START THE SERVER
-// =============================================================================
-app.listen(port);
-console.log('Magic happens on port ' + port);
+app.listen(port, function () {
+  console.log('Magic happens on port ' + port)
+});
