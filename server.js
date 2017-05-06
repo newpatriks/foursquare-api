@@ -179,7 +179,7 @@ var setDate = function(id, res) {
             month: { $month: "$checkins.date"}
         }},
         { $group: {_id :{year:"$year", month:"$month"}, count:{ $sum:1}}},
-        { $group: {_id :{year:"$_id.year"}, monthTotals: { $push:  { month: "$_id.month", count: "$count" } }}}
+        { $group: {_id :{year:"$_id.year"}, months: { $push:  { month: "$_id.month", count: "$count" } }}}
     ], {}, function(err, result) {
         if (err) {
             return err;
