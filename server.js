@@ -11,8 +11,8 @@ var config = {
     "secrets" : {
         'clientId' : process.env.CLIENT_ID,
         'clientSecret' : process.env.CLIENT_SECRET,
-        // 'redirectUrl' : process.env.REDIRECT_URL
-        'redirectUrl' : 'http://localhost:9000/api/callback'
+        'redirectUrl' : process.env.REDIRECT_URL
+        // 'redirectUrl' : 'http://localhost:9000/api/callback'
     }
 };
 
