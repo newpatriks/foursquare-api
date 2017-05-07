@@ -4,7 +4,7 @@ var app         = express();
 var bodyParser  = require('body-parser');
 var mongoose    = require('mongoose');
 var Profile     = require('./profile');
-var port        = 9000;
+var port        = process.env.PORT || 9000;
 var router      = express.Router();
 
 var config = {
