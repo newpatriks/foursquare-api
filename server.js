@@ -16,20 +16,17 @@ var config = {
     }
 };
 
-console.log(config);
+// console.log(config);
 
 // console.log(config);
 var Foursquare  = require("node-foursquare")(config);
-
-console.log('process.env.MONGODB_URI >> ', process.env.MONGODB_URI);
-mongoose.connect(process.env.MONGODB_URI);
-
-var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'mongoose > connection error:'));
-db.once('open', function() {
-    console.log('mongoose > connection successful!');
+mongoose.connect(process.env.MONGODB_URI, function (err, res) {
+    if (err) {
+        console.log ('ERROR connecting to: ' + process.env.MONGODB_URI + '. ' + err);
+    } else {
+        console.log ('Succeeded connected to: ' + process.env.MONGODB_URI);
+    }
 });
-
 
 app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
