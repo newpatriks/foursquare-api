@@ -15,6 +15,7 @@ var config = {
         // 'redirectUrl' : 'http://localhost:9000/api/callback'
     }
 };
+var baseURL = "http://jordillobet.es/projects/habits/#/callback/";
 
 // console.log(config);
 
@@ -55,7 +56,6 @@ router.get('/callback', function (req, res) {
         else {
             // Save the accessToken and redirect.
             console.log('accessToken >> ', accessToken);
-            var baseURL = "http://localhost:8080/app/#/callback/";
             res.writeHead(302, {
                 'Location': baseURL+accessToken
             });
