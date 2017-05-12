@@ -177,7 +177,7 @@ var setDate = function(id, res) {
         }},
         { $group: {_id :{year:"$year", month:"$month"}, count:{ $sum:1}}},
         { $group: {_id :{year:"$_id.year"}, months: { $push:  { month: "$_id.month", count: "$count" } }}}
-    ], {}, function(err, result) {
+    ], function(err, result) {
         if (err) {
             return err;
         }
